@@ -7,37 +7,70 @@ import 'login_page.dart';
 class UserHome extends StatelessWidget {
   final String username;
 
-  const UserHome(this.username, {super.key});
+  const UserHome(
+    this.username, {
+    super.key,
+  });
 
-  Future<void> logout(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  Future<void> logout(
+    BuildContext context,
+  ) async {
+
+    SharedPreferences prefs =
+    await SharedPreferences.getInstance();
+
     await prefs.clear();
 
     Navigator.pushAndRemoveUntil(
+
       context,
+
       MaterialPageRoute(
-        builder: (_) => const LoginPage(),
+        builder: (_) =>
+        const LoginPage(),
       ),
+
       (route) => false,
+
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+
       appBar: AppBar(
-        title: const Text("Bindass Guessing Forum"),
-        backgroundColor: Colors.black,
+
+        backgroundColor:
+        Colors.black,
+
+        title: Text(
+          "Welcome $username",
+        ),
+
         actions: [
+
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => logout(context),
+
+            onPressed: () {
+              logout(context);
+            },
+
+            icon: const Icon(
+              Icons.logout,
+            ),
+
           ),
+
         ],
+
       ),
+
       body: FreeGuessingForum(
         username: username,
       ),
+
     );
   }
 }
