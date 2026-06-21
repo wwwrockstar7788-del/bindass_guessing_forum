@@ -11,14 +11,19 @@ class FreeGuessingForum extends StatefulWidget {
   });
 
   @override
-  State<FreeGuessingForum> createState() => _FreeGuessingForumState();
+  State<FreeGuessingForum> createState() =>
+      _FreeGuessingForumState();
 }
 
-class _FreeGuessingForumState extends State<FreeGuessingForum> {
+class _FreeGuessingForumState
+    extends State<FreeGuessingForum> {
+
   List posts = [];
+
   bool loading = true;
 
-  final TextEditingController postController =
+  final TextEditingController
+  postController =
       TextEditingController();
 
   @override
@@ -28,178 +33,359 @@ class _FreeGuessingForumState extends State<FreeGuessingForum> {
   }
 
   Future<void> loadPosts() async {
+
     try {
-      var res = await http.get(
+
+      var response = await http.get(
+
         Uri.parse(
           "https://khelbindass99.com/bgf/api/bgf_get_posts.php",
         ),
+
       );
 
-      var data = jsonDecode(res.body);
+      var data =
+      jsonDecode(response.body);
 
       setState(() {
-        posts = data["posts"] ?? [];
+
+        posts =
+            data["posts"] ?? [];
+
         loading = false;
+
       });
-    } catch (e) {
+
+    } catch(e){
+
       setState(() {
         loading = false;
       });
+
     }
   }
 
   Future<void> createPost() async {
-    if (postController.text.trim().isEmpty) return;
+
+    if(postController.text
+        .trim()
+        .isEmpty){
+      return;
+    }
 
     try {
-      var res = await http.post(
+
+      var response = await http.post(
+
         Uri.parse(
           "https://khelbindass99.com/bgf/api/bgf_create_post.php",
         ),
+
         body: {
-          "username": widget.username,
-          "message": postController.text.trim(),
+
+          "username":
+          widget.username,
+
+          "message":
+          postController.text
+              .trim(),
+
         },
+
       );
 
-      var data = jsonDecode(res.body);
+      var data =
+      jsonDecode(response.body);
 
-      if (data["status"] == "success") {
+      if(data["status"]
+      ==
+          "success"){
+
         postController.clear();
+
         await loadPosts();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+        if(mounted){
+
+          ScaffoldMessenger
+              .of(context)
+              .showSnackBar(
+
             const SnackBar(
-              content: Text("Post Added"),
+              content:
+              Text(
+                "Post Added",
+              ),
             ),
+
           );
         }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+
+    } catch(e){
+
+      if(mounted){
+
+        ScaffoldMessenger
+            .of(context)
+            .showSnackBar(
+
           SnackBar(
-            content: Text(e.toString()),
+            content:
+            Text(
+              e.toString(),
+            ),
           ),
+
         );
       }
     }
   }
 
-  Widget buildPost(dynamic post) {
-    return Card(
-      color: Colors.black87,
-      margin: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            Text(
-              post["username"] ?? "",
-              style: const TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-              ),
+  void openPostDialog(){
+
+    showDialog(
+
+      context: context,
+
+      builder: (_){
+
+        return AlertDialog(
+
+          title:
+          const Text(
+            "Create Post",
+          ),
+
+          content: TextField(
+
+            controller:
+            postController,
+
+            maxLines: 4,
+
+            decoration:
+            const InputDecoration(
+
+              hintText:
+              "Write Something...",
+
             ),
-            const SizedBox(height: 8),
-            Text(
-              post["message"] ?? "",
-              style: const TextStyle(
-                color: Colors.white,
+
+          ),
+
+          actions: [
+
+            TextButton(
+
+              onPressed: (){
+                Navigator.pop(
+                  context,
+                );
+              },
+
+              child:
+              const Text(
+                "Cancel",
               ),
+
             ),
-            const SizedBox(height: 8),
-            Text(
-              post["created_at"] ?? "",
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 11,
+
+            ElevatedButton(
+
+              onPressed: () async {
+
+                Navigator.pop(
+                  context,
+                );
+
+                await createPost();
+              },
+
+              child:
+              const Text(
+                "POST",
               ),
+
             ),
+
           ],
-        ),
-      ),
+
+        );
+      },
+
     );
   }
 
-  void openCreatePostDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Create Post"),
-        content: TextField(
-          controller: postController,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: "Write something...",
-          ),
+  Widget postCard(
+      dynamic post){
+
+    return Card(
+
+      color:
+      Colors.black87,
+
+      margin:
+      const EdgeInsets.all(8),
+
+      child: Padding(
+
+        padding:
+        const EdgeInsets.all(12),
+
+        child: Column(
+
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
+
+          children: [
+
+            Text(
+
+              post["username"]
+                  ??
+                  "",
+
+              style:
+              const TextStyle(
+
+                color:
+                Colors.amber,
+
+                fontWeight:
+                FontWeight.bold,
+
+              ),
+
+            ),
+
+            const SizedBox(
+              height: 8,
+            ),
+
+            Text(
+
+              post["message"]
+                  ??
+                  "",
+
+              style:
+              const TextStyle(
+                color:
+                Colors.white,
+              ),
+
+            ),
+
+            const SizedBox(
+              height: 8,
+            ),
+
+            Text(
+
+              post["created_at"]
+                  ??
+                  "",
+
+              style:
+              const TextStyle(
+
+                color:
+                Colors.grey,
+
+                fontSize:
+                11,
+
+              ),
+
+            ),
+
+          ],
+
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await createPost();
-            },
-            child: const Text("Post"),
-          ),
-        ],
+
       ),
+
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context){
+
     return Scaffold(
-      backgroundColor: const Color(0xff111111),
+
+      backgroundColor:
+      const Color(
+        0xff111111,
+      ),
 
       floatingActionButton:
-          FloatingActionButton(
-        backgroundColor: Colors.amber,
-        onPressed: openCreatePostDialog,
-        child: const Icon(
+      FloatingActionButton(
+
+        backgroundColor:
+        Colors.amber,
+
+        onPressed:
+        openPostDialog,
+
+        child:
+        const Icon(
           Icons.add,
-          color: Colors.black,
+          color:
+          Colors.black,
         ),
+
       ),
 
-      body: RefreshIndicator(
-        onRefresh: loadPosts,
-        child: loading
+      body:
+      RefreshIndicator(
+
+        onRefresh:
+        loadPosts,
+
+        child:
+
+        loading
+
             ? const Center(
-                child:
-                    CircularProgressIndicator(),
-              )
+          child:
+          CircularProgressIndicator(),
+        )
+
             : posts.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No Posts Found",
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: posts.length,
-                    itemBuilder:
-                        (context, index) {
-                      return buildPost(
-                        posts[index],
-                      );
-                    },
-                  ),
+
+            ? const Center(
+          child:
+          Text(
+            "No Posts Found",
+            style:
+            TextStyle(
+              color:
+              Colors.white,
+            ),
+          ),
+        )
+
+            : ListView.builder(
+
+          itemCount:
+          posts.length,
+
+          itemBuilder:
+              (
+              context,
+              index){
+
+            return postCard(
+              posts[index],
+            );
+          },
+
+        ),
+
       ),
+
     );
   }
-}}
+}
