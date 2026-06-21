@@ -1,14 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-
 import 'package:http/http.dart' as http;
-
-import 'package:bindass_guessing_forum/register_page.dart';
-import 'package:bindass_guessing_forum/user_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'register_page.dart';
 import 'forgot_password_page.dart';
+import 'user_home.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,61 +15,91 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // ================= CONTROLLERS =================
 
-  TextEditingController mobileController = TextEditingController();
+  final TextEditingController usernameController =
+      TextEditingController();
 
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordController =
+      TextEditingController();
 
   bool loading = false;
 
-  // ================= LOGIN =================
   Future<void> login() async {
 
-  if (mobileController.text.isEmpty ||
-      passwordController.text.isEmpty) {
-    showMsg("Please fill all fields");
-    return;
-  }
+    if(usernameController.text.isEmpty ||
+        passwordController.text.isEmpty){
+      return;
+    }
+
+    setState(() {
+      loading = true;
+    });
 
     try {
-      setState(() {
-        loading = true;
-      });
 
-      var res = await http.post(
-        Uri.parse("https://khelbindass99.com/bgf/api/bgf_login.php"),
+      var response = await http.post(
+
+        Uri.parse(
+          "https://khelbindass99.com/bgf/api/bgf_login.php",
+        ),
 
         body: {
-          "username": mobileController.text,
-          "password": passwordController.text,
+
+          "username":
+          usernameController.text,
+
+          "password":
+          passwordController.text,
+
         },
+
       );
 
+      var data =
+      jsonDecode(response.body);
 
-      print("STATUS = ${res.statusCode}");
-      print("BODY = ${res.body}");
+      if(data["status"]=="success"){
 
-      var data = jsonDecode(res.body);
+        SharedPreferences prefs =
+        await SharedPreferences.getInstance();
 
-      if (data['status'] == 'success') {
-        String username = data['username'];
+        await prefs.setBool(
+          "isLoggedIn",
+          true,
+        );
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool("isLoggedIn", true);
-        await prefs.setString("username", username);
+        await prefs.setString(
+          "username",
+          data["username"],
+        );
 
         Navigator.pushReplacement(
+
           context,
 
-          MaterialPageRoute(builder: (_) => UserHome(username)),
+          MaterialPageRoute(
+
+            builder: (_)=>UserHome(
+              data["username"],
+            ),
+
+          ),
+
         );
-      } else {
-        showMsg(data['message'] ?? "Login Failed");
+
+      }else{
+
+        showMsg(
+          data["message"] ??
+              "Login Failed",
+        );
+
       }
-    } catch (e) {
+
+    } catch(e){
+
       showMsg(e.toString());
+
     }
 
     setState(() {
@@ -80,362 +107,197 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  // ================= SNACKBAR =================
+  void showMsg(String msg){
 
-  void showMsg(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
 
-  // ================= UI =================
-
-  @override
-  Widget build(BuildContext context) {
-    bool isAdmin = false;
-
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-
-            colors: [Color(0xff000000), Color(0xff0d2b14), Color(0xff1b5e20)],
-          ),
-        ),
-
-        child: Stack(
-          children: [
-            // TOP GOLD CIRCLE
-            Positioned(
-              top: -120,
-              right: -80,
-
-              child: Container(
-                height: 280,
-                width: 280,
-
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-
-                  color: const Color(0xffffc107).withOpacity(0.12),
-                ),
-              ),
-            ),
-
-            // BOTTOM GOLD CIRCLE
-            Positioned(
-              bottom: -100,
-              left: -60,
-
-              child: Container(
-                height: 240,
-                width: 240,
-
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-
-                  color: const Color(0xffffd54f).withOpacity(0.08),
-                ),
-              ),
-            ),
-
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-
-                child: Column(
-                  children: [
-                    // ================= LOGO =================
-                    Container(
-                      height: 130,
-                      width: 130,
-
-                      padding: const EdgeInsets.all(5),
-
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-
-                        gradient: const LinearGradient(
-                          colors: [Color(0xffffd54f), Color(0xffffb300)],
-                        ),
-
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withOpacity(.4),
-
-                            blurRadius: 25,
-
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-
-                          border: Border.all(
-                            color: const Color(0xffffd54f),
-
-                            width: 3,
-                          ),
-                        ),
-
-                        child: ClipOval(
-                          child: Image.asset(
-                            "assets/khel.jpeg",
-
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 35),
-
-                    // ================= LOGIN CARD =================
-                    Container(
-                      padding: const EdgeInsets.all(24),
-
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(.45),
-
-                        borderRadius: BorderRadius.circular(24),
-
-                        border: Border.all(
-                          color: Colors.amber.withOpacity(.25),
-                        ),
-
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(.3),
-
-                            blurRadius: 20,
-                          ),
-                        ],
-                      ),
-
-                      child: Column(
-                        children: [
-                          ShaderMask(
-                            shaderCallback: (bounds) {
-                              return const LinearGradient(
-                                colors: [Color(0xfffff8dc), Color(0xffffc107)],
-                              ).createShader(bounds);
-                            },
-
-                            child: Text(
-                              "BINDASS GUESSING FORUM",
-
-                              style: const TextStyle(
-                                color: Colors.white,
-
-                                fontSize: 30,
-
-                                fontWeight: FontWeight.bold,
-
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // ================= MOBILE =================
-                          TextField(
-                            controller: mobileController,
-
-                            onChanged: (v) {
-                              setState(() {});
-                            },
-
-                            style: const TextStyle(color: Colors.white),
-
-                            decoration: InputDecoration(
-                              hintText: "Username",
-
-                              hintStyle: const TextStyle(color: Colors.white70),
-
-                              prefixIcon: Icon(
-                                Icons.person,
-
-                                color: Colors.amber,
-                              ),
-
-                              filled: true,
-
-                              fillColor: Colors.white.withOpacity(.08),
-
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // ================= PASSWORD =================
-                          buildField(
-                            controller: passwordController,
-
-                            hint: "Password",
-
-                            icon: Icons.lock,
-
-                            obscure: true,
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          if (!isAdmin) const SizedBox(height: 25),
-
-                          // ================= LOGIN BUTTON =================
-                          SizedBox(
-                            width: double.infinity,
-
-                            height: 58,
-
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xffffc107),
-
-                                foregroundColor: Colors.black,
-
-                                elevation: 10,
-
-                                shadowColor: Colors.amber,
-
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-
-                              onPressed: loading ? null : login,
-
-                              child: loading
-                                  ? const CircularProgressIndicator(
-                                      color: Colors.black,
-                                    )
-                                  : const Text(
-                                      "LOGIN",
-
-                                      style: TextStyle(
-                                        fontSize: 18,
-
-                                        fontWeight: FontWeight.bold,
-
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // ================= REGISTER =================
-                          if (!isAdmin)
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => RegisterPage(),
-                                  ),
-                                );
-                              },
-
-                              child: const Text(
-                                "Create Account",
-
-                                style: TextStyle(
-                                  color: Colors.amber,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                  const ForgotPasswordPage(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "Forgot Password?",
-                              style: TextStyle(
-                                color: Colors.amber,
-
-                                fontSize: 15,
-
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      SnackBar(
+        content: Text(msg),
       ),
+
     );
   }
 
-  // ================= COMMON TEXTFIELD =================
+  @override
+  Widget build(BuildContext context) {
 
-  Widget buildField({
-    required TextEditingController controller,
+    return Scaffold(
 
-    required String hint,
+      backgroundColor:
+      const Color(0xff111111),
 
-    required IconData icon,
+      body: Center(
 
-    bool obscure = false,
+        child: SingleChildScrollView(
 
-    TextInputType keyboard = TextInputType.text,
+          padding:
+          const EdgeInsets.all(20),
 
-    int? maxLength,
-  }) {
-    return TextField(
-      controller: controller,
+          child: Column(
 
-      obscureText: obscure,
+            children: [
 
-      keyboardType: keyboard,
+              const Icon(
+                Icons.forum,
+                color: Colors.amber,
+                size: 100,
+              ),
 
-      maxLength: maxLength,
+              const SizedBox(height: 20),
 
-      style: const TextStyle(color: Colors.white),
+              const Text(
 
-      decoration: InputDecoration(
-        counterText: "",
+                "BINDASS GUESSING FORUM",
 
-        hintText: hint,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight:
+                  FontWeight.bold,
+                ),
 
-        hintStyle: const TextStyle(color: Colors.white54),
+              ),
 
-        prefixIcon: Icon(icon, color: Colors.white70),
+              const SizedBox(height: 30),
 
-        filled: true,
+              TextField(
 
-        fillColor: const Color(0xff0F172A),
+                controller:
+                usernameController,
 
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
 
-          borderSide: BorderSide.none,
+                decoration:
+                const InputDecoration(
+
+                  hintText:
+                  "Username",
+
+                  hintStyle:
+                  TextStyle(
+                    color:
+                    Colors.white54,
+                  ),
+
+                ),
+
+              ),
+
+              const SizedBox(height: 15),
+
+              TextField(
+
+                controller:
+                passwordController,
+
+                obscureText: true,
+
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+
+                decoration:
+                const InputDecoration(
+
+                  hintText:
+                  "Password",
+
+                  hintStyle:
+                  TextStyle(
+                    color:
+                    Colors.white54,
+                  ),
+
+                ),
+
+              ),
+
+              const SizedBox(height: 25),
+
+              SizedBox(
+
+                width: double.infinity,
+
+                child: ElevatedButton(
+
+                  onPressed:
+                  loading
+                      ? null
+                      : login,
+
+                  child: loading
+
+                      ? const CircularProgressIndicator()
+
+                      : const Text(
+                    "LOGIN",
+                  ),
+
+                ),
+
+              ),
+
+              TextButton(
+
+                onPressed: () {
+
+                  Navigator.push(
+
+                    context,
+
+                    MaterialPageRoute(
+
+                      builder: (_)=>
+                      RegisterPage(),
+
+                    ),
+
+                  );
+
+                },
+
+                child: const Text(
+                  "Create Account",
+                ),
+
+              ),
+
+              TextButton(
+
+                onPressed: () {
+
+                  Navigator.push(
+
+                    context,
+
+                    MaterialPageRoute(
+
+                      builder: (_)=>
+                      const ForgotPasswordPage(),
+
+                    ),
+
+                  );
+
+                },
+
+                child: const Text(
+                  "Forgot Password",
+                ),
+
+              ),
+
+            ],
+
+          ),
+
         ),
+
       ),
+
     );
   }
 }
